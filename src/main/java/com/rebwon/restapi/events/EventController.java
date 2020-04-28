@@ -4,6 +4,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 import java.net.URI;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,11 +19,13 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping(value = "/api/events", produces = MediaTypes.HAL_JSON_VALUE)
 public class EventController {
 	private final EventRepository eventRepository;
-
+	private final ModelMapper modelMapper;
+	
 	@PostMapping
-	public ResponseEntity createEvent(@RequestBody Event event) {
-		Event saveEntity = this.eventRepository.save(event);
-		URI uri = linkTo(EventController.class).slash(saveEntity.getId()).toUri();
-		return ResponseEntity.created(uri).body(event);
+	public ResponseEntity createEvent(@RequestBody EventPayload payload) {
+		Event event = modelMapper.map(payload, Event.class);
+		Event newEvent = this.eventRepository.save(event);
+		URI uri = linkTo(EventController.class).slash(newEvent.getId()).toUri();
+		return ResponseEntity.created(uri).body(newEvent);
 	}
 }
