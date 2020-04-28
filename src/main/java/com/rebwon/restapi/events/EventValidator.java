@@ -2,8 +2,6 @@ package com.rebwon.restapi.events;
 
 import java.time.LocalDateTime;
 
-import javax.validation.constraints.NotNull;
-
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 
