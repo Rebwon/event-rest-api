@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -21,7 +22,6 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.rebwon.restapi.common.TestDescription;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -41,7 +41,7 @@ public class EventControllerTests {
 	}
 
 	@Test
-	@TestDescription("정상적으로 이벤트를 생성하는 테스트")
+	@DisplayName("정상적으로 이벤트를 생성하는 테스트")
 	void createEvent() throws Exception {
 		EventPayload event = EventPayload.builder()
 			.name("Spring")
@@ -71,7 +71,7 @@ public class EventControllerTests {
 	}
 
 	@Test
-	@TestDescription("입력 받을 수 없는 값을 사용하는 경우 에러가 발생하는 테스트")
+	@DisplayName("입력 받을 수 없는 값을 사용하는 경우 에러가 발생하는 테스트")
 	void createEvent_Bad_Request() throws Exception {
 		Event event = Event.builder()
 			.id(100)
@@ -91,15 +91,15 @@ public class EventControllerTests {
 			.build();
 
 		mockMvc.perform(post("/api/events")
-			.contentType(MediaType.APPLICATION_JSON)
-			.accept(MediaTypes.HAL_JSON)
+				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaTypes.HAL_JSON)
 			.content(objectMapper.writeValueAsString(event)))
 			.andDo(print())
 			.andExpect(status().isBadRequest());
 	}
 
 	@Test
-	@TestDescription("입력 값이 비어있는 경우 에러가 발생하는 테스트")
+	@DisplayName("입력 값이 비어있는 경우 에러가 발생하는 테스트")
 	void createEvent_Bad_Request_Empty_Input() throws Exception {
 		EventPayload event = EventPayload.builder().build();
 
@@ -110,7 +110,7 @@ public class EventControllerTests {
 	}
 
 	@Test
-	@TestDescription("입력 값이 잘못된 경우 에러가 발생하는 테스트")
+	@DisplayName("입력 값이 잘못된 경우 에러가 발생하는 테스트")
 	void createEvent_Bad_Request_Wrong_Input() throws Exception {
 		EventPayload event = EventPayload.builder()
 			.name("Spring")
@@ -118,7 +118,7 @@ public class EventControllerTests {
 			.beginEnrollmentDateTime(LocalDateTime.of(2020, 4, 28, 4, 1))
 			.closeEnrollmentDateTime(LocalDateTime.of(2020, 4, 27, 4, 1))
 			.beginEventDateTime(LocalDateTime.of(2020, 4, 2, 1, 1))
-			.endEventDateTime(LocalDateTime.of(2020, 5, 1, 20, 1))
+			.endEventDateTime(LocalDateTime.of(2020, 3, 1, 20, 1))
 			.basePrice(10000)
 			.maxPrice(200)
 			.limitOfEnrollment(100)
@@ -126,8 +126,9 @@ public class EventControllerTests {
 			.build();
 
 		this.mockMvc.perform(post("/api/events")
-			.content(objectMapper.writeValueAsString(event))
-			.contentType(MediaType.APPLICATION_JSON))
+				.content(objectMapper.writeValueAsString(event))
+				.contentType(MediaType.APPLICATION_JSON))
+			.andDo(print())
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$[0].objectName").exists())
 			.andExpect(jsonPath("$[0].defaultMessage").exists())

@@ -10,8 +10,7 @@ public class EventValidator {
 
 	public void validate(EventPayload eventPayload, Errors errors) {
 		if(eventPayload.getBasePrice() > eventPayload.getMaxPrice() && eventPayload.getMaxPrice() > 0) {
-			errors.rejectValue("basePrice", "wrongValue", "basePrice is Wrong.");
-			errors.rejectValue("maxPrice", "wrongValue", "maxPrice is Wrong.");
+			errors.reject("wrongPrices", "Values to prices are wrong.");
 		}
 		LocalDateTime endEventDateTime = eventPayload.getEndEventDateTime();
 		if(endEventDateTime.isBefore(eventPayload.getBeginEventDateTime()) ||
@@ -19,7 +18,5 @@ public class EventValidator {
 		endEventDateTime.isBefore(eventPayload.getBeginEnrollmentDateTime())) {
 			errors.rejectValue("endEventDateTime", "wrongValue", "endEventDateTime is Wrong.");
 		}
-
-
 	}
 }
