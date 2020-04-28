@@ -23,12 +23,19 @@ import lombok.RequiredArgsConstructor;
 public class EventController {
 	private final EventRepository eventRepository;
 	private final ModelMapper modelMapper;
+	private final EventValidator eventValidator;
 	
 	@PostMapping
 	public ResponseEntity createEvent(@RequestBody @Valid EventPayload payload, Errors errors) {
 		if(errors.hasErrors()) {
 			return ResponseEntity.badRequest().build();
 		}
+
+		eventValidator.validate(payload, errors);
+		if(errors.hasErrors()) {
+			return ResponseEntity.badRequest().build();
+		}
+
 		Event event = modelMapper.map(payload, Event.class);
 		Event newEvent = this.eventRepository.save(event);
 		URI uri = linkTo(EventController.class).slash(newEvent.getId()).toUri();

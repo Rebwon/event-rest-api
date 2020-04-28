@@ -104,4 +104,25 @@ public class EventControllerTests {
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isBadRequest());
 	}
+
+	@Test
+	void createEvent_Bad_Request_Wrong_Input() throws Exception {
+		EventPayload event = EventPayload.builder()
+			.name("Spring")
+			.description("Spring Rest API")
+			.beginEnrollmentDateTime(LocalDateTime.of(2020, 4, 28, 4, 1))
+			.closeEnrollmentDateTime(LocalDateTime.of(2020, 4, 27, 4, 1))
+			.beginEventDateTime(LocalDateTime.of(2020, 4, 2, 1, 1))
+			.endEventDateTime(LocalDateTime.of(2020, 5, 1, 20, 1))
+			.basePrice(10000)
+			.maxPrice(200)
+			.limitOfEnrollment(100)
+			.location("강남 D2 스타트 팩토리")
+			.build();
+
+		this.mockMvc.perform(post("/api/events")
+			.content(objectMapper.writeValueAsString(event))
+			.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isBadRequest());
+	}
 }
