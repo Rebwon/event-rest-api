@@ -1,9 +1,14 @@
 package com.rebwon.restapi.events;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.params.provider.Arguments.*;
+
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class EventTest {
 
@@ -31,66 +36,49 @@ class EventTest {
 		assertThat(event.getDescription()).isEqualTo(description);
 	}
 
-	@Test
-	void eventFree() {
+	@ParameterizedTest
+	@MethodSource("eventPriceAndFree")
+	void eventFree(int basePrice, int maxPrice, boolean isFree) {
 		// given
 		Event event = Event.builder()
-			.basePrice(0)
-			.maxPrice(0)
+			.basePrice(basePrice)
+			.maxPrice(maxPrice)
 			.build();
 
 		// when
 		event.update();
 
 		// then
-		assertThat(event.isFree()).isTrue();
-
-		// given
-		event = Event.builder()
-			.basePrice(100)
-			.maxPrice(0)
-			.build();
-
-		// when
-		event.update();
-
-		// then
-		assertThat(event.isFree()).isFalse();
-
-		// given
-		event = Event.builder()
-			.basePrice(0)
-			.maxPrice(100)
-			.build();
-
-		// when
-		event.update();
-
-		// then
-		assertThat(event.isFree()).isFalse();
+		assertThat(event.isFree()).isEqualTo(isFree);
 	}
 
-	@Test
-	void eventOnlineOrOffLine() {
+	static Stream<Arguments> eventPriceAndFree() {
+		return Stream.of(
+			arguments(0, 0, true),
+			arguments(100, 0, false),
+			arguments(0, 100, false)
+		);
+	}
+
+	@ParameterizedTest
+	@MethodSource("eventLocationOffLine")
+	void eventOnlineOrOffLine(String location, boolean isOffline) {
 		// given
 		Event event = Event.builder()
-			.location("강남역 네이버 D2 스타트업 팩토리")
+			.location(location)
 			.build();
 
 		// when
 		event.update();
 
 		// then
-		assertThat(event.isOffline()).isTrue();
+		assertThat(event.isOffline()).isEqualTo(isOffline);
+	}
 
-		// given
-		event = Event.builder()
-			.build();
-
-		// when
-		event.update();
-
-		// then
-		assertThat(event.isOffline()).isFalse();
+	static Stream<Arguments> eventLocationOffLine() {
+		return Stream.of(
+			arguments("강남 D2 스타트업 팩토리", true),
+			arguments("", false)
+		);
 	}
 }
