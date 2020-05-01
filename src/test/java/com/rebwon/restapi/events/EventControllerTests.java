@@ -1,5 +1,9 @@
 package com.rebwon.restapi.events;
 
+import static org.springframework.restdocs.headers.HeaderDocumentation.*;
+import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.*;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -10,21 +14,29 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.restdocs.RestDocumentationContextProvider;
+import org.springframework.restdocs.RestDocumentationExtension;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rebwon.restapi.common.RestDocsConfig;
 
 @SpringBootTest
+@Import(RestDocsConfig.class)
 @AutoConfigureMockMvc
+@ExtendWith({RestDocumentationExtension.class, SpringExtension.class})
 public class EventControllerTests {
 
 	@Autowired
@@ -34,9 +46,11 @@ public class EventControllerTests {
 	ObjectMapper objectMapper;
 
 	@BeforeEach
-	protected void setUp(WebApplicationContext webApplicationContext) {
+	void setUp(WebApplicationContext webApplicationContext,
+		RestDocumentationContextProvider restDocumentationContextProvider) {
 		this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
 			.addFilter(new CharacterEncodingFilter("UTF-8", true))
+			.apply(documentationConfiguration(restDocumentationContextProvider))
 			.build();
 	}
 
@@ -56,7 +70,7 @@ public class EventControllerTests {
 			.location("강남 D2 스타트 팩토리")
 			.build();
 
-		mockMvc.perform(post("/api/events")
+		this.mockMvc.perform(post("/api/events")
 					.contentType(MediaType.APPLICATION_JSON)
 					.accept(MediaTypes.HAL_JSON)
 					.content(objectMapper.writeValueAsString(event)))
@@ -70,7 +84,53 @@ public class EventControllerTests {
 			.andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name()))
 			.andExpect(jsonPath("_links.self").exists())
 			.andExpect(jsonPath("_links.query-events").exists())
-			.andExpect(jsonPath("_links.update-event").exists());
+			.andExpect(jsonPath("_links.update-event").exists())
+			.andDo(document("create-event",
+				links(
+					linkWithRel("self").description("link to self"),
+					linkWithRel("query-events").description("link to query events"),
+					linkWithRel("update-event").description("link to update an existing event")
+				),
+				requestHeaders(
+					headerWithName(HttpHeaders.ACCEPT).description("accept header"),
+					headerWithName(HttpHeaders.CONTENT_TYPE).description("content type")
+				),
+				requestFields(
+					fieldWithPath("name").description("name of new event"),
+					fieldWithPath("description").description("description of new event"),
+					fieldWithPath("beginEnrollmentDateTime").description("beginEnrollmentDateTime of new event"),
+					fieldWithPath("closeEnrollmentDateTime").description("closeEnrollmentDateTime of new event"),
+					fieldWithPath("beginEventDateTime").description("beginEventDateTime of new event"),
+					fieldWithPath("endEventDateTime").description("endEventDateTime of new event"),
+					fieldWithPath("basePrice").description("basePrice of new event"),
+					fieldWithPath("maxPrice").description("maxPrice of new event"),
+					fieldWithPath("limitOfEnrollment").description("limitOfEnrollment of new event"),
+					fieldWithPath("location").description("location of new event")
+				),
+				responseHeaders(
+					headerWithName(HttpHeaders.LOCATION).description("location"),
+					headerWithName(HttpHeaders.CONTENT_TYPE).description("content type")
+				),
+				responseFields(
+					fieldWithPath("id").description("identifier of new event"),
+					fieldWithPath("name").description("name of new event"),
+					fieldWithPath("description").description("description of new event"),
+					fieldWithPath("beginEnrollmentDateTime").description("beginEnrollmentDateTime of new event"),
+					fieldWithPath("closeEnrollmentDateTime").description("closeEnrollmentDateTime of new event"),
+					fieldWithPath("beginEventDateTime").description("beginEventDateTime of new event"),
+					fieldWithPath("endEventDateTime").description("endEventDateTime of new event"),
+					fieldWithPath("basePrice").description("basePrice of new event"),
+					fieldWithPath("maxPrice").description("maxPrice of new event"),
+					fieldWithPath("limitOfEnrollment").description("limitOfEnrollment of new event"),
+					fieldWithPath("location").description("location of new event"),
+					fieldWithPath("free").description("it tells if this event is free or not"),
+					fieldWithPath("offline").description("it tells if this event is offline meeting or not"),
+					fieldWithPath("eventStatus").description("event status"),
+					fieldWithPath("_links.self.href").description("link to self"),
+					fieldWithPath("_links.query-events.href").description("link to query-events"),
+					fieldWithPath("_links.update-event.href").description("link to update-event")
+				)
+			));
 	}
 
 	@Test
@@ -93,7 +153,7 @@ public class EventControllerTests {
 			.eventStatus(EventStatus.PUBLISHED)
 			.build();
 
-		mockMvc.perform(post("/api/events")
+		this.mockMvc.perform(post("/api/events")
 				.contentType(MediaType.APPLICATION_JSON)
 				.accept(MediaTypes.HAL_JSON)
 			.content(objectMapper.writeValueAsString(event)))
