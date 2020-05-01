@@ -10,49 +10,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.LocalDateTime;
 
-import org.hamcrest.Matchers;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.restdocs.RestDocumentationContextProvider;
-import org.springframework.restdocs.RestDocumentationExtension;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.filter.CharacterEncodingFilter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.rebwon.restapi.common.RestDocsConfig;
+import com.rebwon.restapi.common.ControllerTests;
 
-@SpringBootTest
-@Import(RestDocsConfig.class)
-@AutoConfigureMockMvc
-@ExtendWith({RestDocumentationExtension.class, SpringExtension.class})
-public class EventControllerTests {
-
-	@Autowired
-	MockMvc mockMvc;
-
-	@Autowired
-	ObjectMapper objectMapper;
-
-	@BeforeEach
-	void setUp(WebApplicationContext webApplicationContext,
-		RestDocumentationContextProvider restDocumentationContextProvider) {
-		this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
-			.addFilter(new CharacterEncodingFilter("UTF-8", true))
-			.apply(documentationConfiguration(restDocumentationContextProvider))
-			.build();
-	}
+public class EventControllerTests extends ControllerTests {
 
 	@Test
 	@DisplayName("정상적으로 이벤트를 생성하는 테스트")
@@ -70,7 +36,7 @@ public class EventControllerTests {
 			.location("강남 D2 스타트 팩토리")
 			.build();
 
-		this.mockMvc.perform(post("/api/events")
+		mockMvc.perform(post("/api/events")
 					.contentType(MediaType.APPLICATION_JSON)
 					.accept(MediaTypes.HAL_JSON)
 					.content(objectMapper.writeValueAsString(event)))
@@ -89,7 +55,8 @@ public class EventControllerTests {
 				links(
 					linkWithRel("self").description("link to self"),
 					linkWithRel("query-events").description("link to query events"),
-					linkWithRel("update-event").description("link to update an existing event")
+					linkWithRel("update-event").description("link to update an existing event"),
+					linkWithRel("profile").description("link to profile")
 				),
 				requestHeaders(
 					headerWithName(HttpHeaders.ACCEPT).description("accept header"),
@@ -128,7 +95,8 @@ public class EventControllerTests {
 					fieldWithPath("eventStatus").description("event status"),
 					fieldWithPath("_links.self.href").description("link to self"),
 					fieldWithPath("_links.query-events.href").description("link to query-events"),
-					fieldWithPath("_links.update-event.href").description("link to update-event")
+					fieldWithPath("_links.update-event.href").description("link to update-event"),
+					fieldWithPath("_links.profile.href").description("link to profile")
 				)
 			));
 	}
@@ -153,7 +121,7 @@ public class EventControllerTests {
 			.eventStatus(EventStatus.PUBLISHED)
 			.build();
 
-		this.mockMvc.perform(post("/api/events")
+		mockMvc.perform(post("/api/events")
 				.contentType(MediaType.APPLICATION_JSON)
 				.accept(MediaTypes.HAL_JSON)
 			.content(objectMapper.writeValueAsString(event)))
@@ -166,7 +134,7 @@ public class EventControllerTests {
 	void createEvent_Bad_Request_Empty_Input() throws Exception {
 		EventPayload event = EventPayload.builder().build();
 
-		this.mockMvc.perform(post("/api/events")
+		mockMvc.perform(post("/api/events")
 				.content(objectMapper.writeValueAsString(event))
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isBadRequest());
@@ -188,7 +156,7 @@ public class EventControllerTests {
 			.location("강남 D2 스타트 팩토리")
 			.build();
 
-		this.mockMvc.perform(post("/api/events")
+		mockMvc.perform(post("/api/events")
 				.content(objectMapper.writeValueAsString(event))
 				.contentType(MediaType.APPLICATION_JSON))
 			.andDo(print())
