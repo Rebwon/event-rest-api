@@ -9,9 +9,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.LocalDateTime;
+import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -19,6 +21,9 @@ import org.springframework.http.MediaType;
 import com.rebwon.restapi.common.ControllerTests;
 
 public class EventControllerTests extends ControllerTests {
+
+	@Autowired
+	EventRepository eventRepository;
 
 	@Test
 	@DisplayName("정상적으로 이벤트를 생성하는 테스트")
@@ -165,5 +170,71 @@ public class EventControllerTests extends ControllerTests {
 			.andExpect(jsonPath("content[0].defaultMessage").exists())
 			.andExpect(jsonPath("content[0].code").exists())
 			.andExpect(jsonPath("_links.index").exists());
+	}
+
+	@Test
+	@DisplayName("30개의 이벤트를 10개씩 두번째 페이지 조회하기")
+	void queryEvents() throws Exception {
+		IntStream.range(0, 30).forEach(this::generateEvent);
+
+		mockMvc.perform(get("/api/events")
+				.param("page", "1")
+				.param("size", "10")
+				.param("sort", "name,DESC")
+		)
+			.andDo(print())
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("page").exists())
+			.andExpect(jsonPath("_embedded.eventList[0]._links.self").exists())
+			.andExpect(jsonPath("_links.self").exists())
+			.andExpect(jsonPath("_links.profile").exists())
+			.andDo(document("query-events",
+				links(
+					linkWithRel("first").description("link to query events first page"),
+					linkWithRel("prev").description("link to query events previous page"),
+					linkWithRel("self").description("self link to query events"),
+					linkWithRel("next").description("link to query events next page"),
+					linkWithRel("last").description("link to query events last page"),
+					linkWithRel("profile").description("link to profile")
+				),
+				responseHeaders(
+					headerWithName(HttpHeaders.CONTENT_TYPE).description("content type")
+				),
+				responseFields(
+					fieldWithPath("_embedded.eventList[0].id").description("identifier of new event"),
+					fieldWithPath("_embedded.eventList[0].name").description("name of new event"),
+					fieldWithPath("_embedded.eventList[0].description").description("description of new event"),
+					fieldWithPath("_embedded.eventList[0].beginEnrollmentDateTime").description("beginEnrollmentDateTime of new event"),
+					fieldWithPath("_embedded.eventList[0].closeEnrollmentDateTime").description("closeEnrollmentDateTime of new event"),
+					fieldWithPath("_embedded.eventList[0].beginEventDateTime").description("beginEventDateTime of new event"),
+					fieldWithPath("_embedded.eventList[0].endEventDateTime").description("endEventDateTime of new event"),
+					fieldWithPath("_embedded.eventList[0].basePrice").description("basePrice of new event"),
+					fieldWithPath("_embedded.eventList[0].maxPrice").description("maxPrice of new event"),
+					fieldWithPath("_embedded.eventList[0].limitOfEnrollment").description("limitOfEnrollment of new event"),
+					fieldWithPath("_embedded.eventList[0].location").description("location of new event"),
+					fieldWithPath("_embedded.eventList[0].free").description("it tells if this event is free or not"),
+					fieldWithPath("_embedded.eventList[0].offline").description("it tells if this event is offline meeting or not"),
+					fieldWithPath("_embedded.eventList[0].eventStatus").description("event status"),
+					fieldWithPath("_embedded.eventList[0]._links.self.href").description("event status"),
+					fieldWithPath("_links.first.href").description("link to query events first page"),
+					fieldWithPath("_links.prev.href").description("link to query events previous page"),
+					fieldWithPath("_links.self.href").description("self link to query events"),
+					fieldWithPath("_links.next.href").description("link to query events next page"),
+					fieldWithPath("_links.last.href").description("link to query events last page"),
+					fieldWithPath("_links.profile.href").description("link to profile"),
+					fieldWithPath("page.size").description("current events size"),
+					fieldWithPath("page.totalElements").description("total events size"),
+					fieldWithPath("page.totalPages").description("total events page size"),
+					fieldWithPath("page.number").description("current page number")
+				)
+			));
+	}
+
+	private void generateEvent(int i) {
+		Event event = Event.builder()
+			.name("event " + i)
+			.description("test event")
+			.build();
+		this.eventRepository.save(event);
 	}
 }

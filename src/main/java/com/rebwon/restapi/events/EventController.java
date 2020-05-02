@@ -7,11 +7,17 @@ import java.net.URI;
 import javax.validation.Valid;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,6 +55,14 @@ public class EventController {
 		eventModel.add(selfLinkBuilder.withRel("update-event"));
 		eventModel.add(new Link("/docs/index.html#resources-events-create").withRel("profile"));
 		return ResponseEntity.created(uri).body(eventModel);
+	}
+
+	@GetMapping
+	public ResponseEntity queryEvents(Pageable pageable, PagedResourcesAssembler<Event> assembler) {
+		Page<Event> page = eventRepository.findAll(pageable);
+		var pageModels = assembler.toModel(page, e -> new EventModel(e));
+		pageModels.add(new Link("/docs/index.html#resources-events-list").withRel("profile"));
+		return ResponseEntity.ok(pageModels);
 	}
 
 	private ResponseEntity badRequest(Errors errors) {
