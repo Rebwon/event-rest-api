@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.rebwon.restapi.common.ErrorsModel;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -30,12 +31,12 @@ public class EventController {
 	@PostMapping
 	public ResponseEntity createEvent(@RequestBody @Valid EventPayload payload, Errors errors) {
 		if(errors.hasErrors()) {
-			return ResponseEntity.badRequest().body(errors);
+			return badRequest(errors);
 		}
 
 		eventValidator.validate(payload, errors);
 		if(errors.hasErrors()) {
-			return ResponseEntity.badRequest().body(errors);
+			return badRequest(errors);
 		}
 
 		Event event = modelMapper.map(payload, Event.class);
@@ -48,5 +49,9 @@ public class EventController {
 		eventModel.add(selfLinkBuilder.withRel("update-event"));
 		eventModel.add(new Link("/docs/index.html#resources-events-create").withRel("profile"));
 		return ResponseEntity.created(uri).body(eventModel);
+	}
+
+	private ResponseEntity badRequest(Errors errors) {
+		return ResponseEntity.badRequest().body(new ErrorsModel(errors));
 	}
 }
