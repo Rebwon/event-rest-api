@@ -173,6 +173,136 @@ public class EventControllerTests extends ControllerTests {
 	}
 
 	@Test
+	@DisplayName("기존 이벤트를 수정하려는 경우")
+	void updateEvent() throws Exception {
+		Event dbEvent = generateEvent(130);
+		EventPayload event = EventPayload.builder()
+			.name("Spring")
+			.description("Spring Rest API")
+			.beginEnrollmentDateTime(LocalDateTime.of(2020, 4, 27, 4, 1))
+			.closeEnrollmentDateTime(LocalDateTime.of(2020, 4, 28, 4, 1))
+			.beginEventDateTime(LocalDateTime.of(2020, 4, 30, 1, 1))
+			.endEventDateTime(LocalDateTime.of(2020, 5, 1, 20, 1))
+			.basePrice(100)
+			.maxPrice(200)
+			.limitOfEnrollment(100)
+			.location("강남 D2 스타트 팩토리")
+			.build();
+
+		mockMvc.perform(put("/api/events/{id}", dbEvent.getId())
+				.accept(MediaTypes.HAL_JSON)
+				.content(objectMapper.writeValueAsString(event))
+				.contentType(MediaType.APPLICATION_JSON))
+			.andDo(print())
+			.andExpect(status().isOk())
+			.andDo(document("update-event",
+				links(
+					linkWithRel("self").description("link to self"),
+					linkWithRel("query-events").description("link to query events"),
+					linkWithRel("update-event").description("link to update an existing event"),
+					linkWithRel("profile").description("link to profile")
+				),
+				requestHeaders(
+					headerWithName(HttpHeaders.ACCEPT).description("accept header"),
+					headerWithName(HttpHeaders.CONTENT_TYPE).description("content type")
+				),
+				requestFields(
+					fieldWithPath("name").description("name of update event"),
+					fieldWithPath("description").description("description of update event"),
+					fieldWithPath("beginEnrollmentDateTime").description("beginEnrollmentDateTime of update event"),
+					fieldWithPath("closeEnrollmentDateTime").description("closeEnrollmentDateTime of update event"),
+					fieldWithPath("beginEventDateTime").description("beginEventDateTime of update event"),
+					fieldWithPath("endEventDateTime").description("endEventDateTime of update event"),
+					fieldWithPath("basePrice").description("basePrice of update event"),
+					fieldWithPath("maxPrice").description("maxPrice of update event"),
+					fieldWithPath("limitOfEnrollment").description("limitOfEnrollment of update event"),
+					fieldWithPath("location").description("location of update event")
+				),
+				responseHeaders(
+					headerWithName(HttpHeaders.CONTENT_TYPE).description("content type")
+				),
+				responseFields(
+					fieldWithPath("id").description("identifier of update event"),
+					fieldWithPath("name").description("name of update event"),
+					fieldWithPath("description").description("description of update event"),
+					fieldWithPath("beginEnrollmentDateTime").description("beginEnrollmentDateTime of update event"),
+					fieldWithPath("closeEnrollmentDateTime").description("closeEnrollmentDateTime of update event"),
+					fieldWithPath("beginEventDateTime").description("beginEventDateTime of update event"),
+					fieldWithPath("endEventDateTime").description("endEventDateTime of update event"),
+					fieldWithPath("basePrice").description("basePrice of update event"),
+					fieldWithPath("maxPrice").description("maxPrice of update event"),
+					fieldWithPath("limitOfEnrollment").description("limitOfEnrollment of update event"),
+					fieldWithPath("location").description("location of update event"),
+					fieldWithPath("free").description("it tells if this event is free or not"),
+					fieldWithPath("offline").description("it tells if this event is offline meeting or not"),
+					fieldWithPath("eventStatus").description("event status"),
+					fieldWithPath("_links.self.href").description("link to self"),
+					fieldWithPath("_links.query-events.href").description("link to query-events"),
+					fieldWithPath("_links.update-event.href").description("link to update-event"),
+					fieldWithPath("_links.profile.href").description("link to profile")
+				))
+			);
+	}
+
+	@Test
+	@DisplayName("없는 이벤트를 수정하려는 경우")
+	void updateEvent_does_not_exist() throws Exception {
+		EventPayload event = EventPayload.builder()
+			.build();
+
+		mockMvc.perform(put("/api/events/1234")
+				.content(objectMapper.writeValueAsString(event))
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isNotFound());
+	}
+
+	@Test
+	@DisplayName("입력 값이 잘못된 경우에 에러가 발생하는 테스트")
+	void updateEvent_Bad_request_Wrong_Input() throws Exception {
+		Event dbEvent = generateEvent(102);
+		EventPayload event = EventPayload.builder()
+			.build();
+
+		mockMvc.perform(put("/api/events/{id}", dbEvent.getId())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(event)))
+			.andDo(print())
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("content[0].objectName").exists())
+			.andExpect(jsonPath("content[0].defaultMessage").exists())
+			.andExpect(jsonPath("content[0].code").exists())
+			.andExpect(jsonPath("_links.index").exists());
+	}
+
+	@Test
+	@DisplayName("도메인 로직 검증에서 실패한 테스트")
+	void updateEvent_Bad_request_domain_error() throws Exception {
+		Event dbEvent = generateEvent(125);
+		EventPayload event = EventPayload.builder()
+			.name("Spring")
+			.description("Spring Rest API")
+			.beginEnrollmentDateTime(LocalDateTime.of(2020, 4, 28, 4, 1))
+			.closeEnrollmentDateTime(LocalDateTime.of(2020, 4, 27, 4, 1))
+			.beginEventDateTime(LocalDateTime.of(2020, 4, 2, 1, 1))
+			.endEventDateTime(LocalDateTime.of(2020, 3, 1, 20, 1))
+			.basePrice(10000)
+			.maxPrice(200)
+			.limitOfEnrollment(100)
+			.location("강남 D2 스타트 팩토리")
+			.build();
+
+		mockMvc.perform(put("/api/events/{id}", dbEvent.getId())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(event)))
+			.andDo(print())
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("content[0].objectName").exists())
+			.andExpect(jsonPath("content[0].defaultMessage").exists())
+			.andExpect(jsonPath("content[0].code").exists())
+			.andExpect(jsonPath("_links.index").exists());
+	}
+
+	@Test
 	@DisplayName("30개의 이벤트를 10개씩 두번째 페이지 조회하기")
 	void queryEvents() throws Exception {
 		IntStream.range(0, 30).forEach(this::generateEvent);
