@@ -73,13 +73,13 @@ public class EventController {
 			return badRequest(errors);
 		}
 
-		Event event = optionalEvent.get();
-		modelMapper.map(payload, event);
+		Event existingEvent = optionalEvent.get();
+		modelMapper.map(payload, existingEvent);
 
-		this.eventRepository.save(event);
-		EventModel eventModel = new EventModel(event);
+		Event savedEvent = this.eventRepository.save(existingEvent);
+		EventModel eventModel = new EventModel(savedEvent);
 		eventModel.add(linkTo(EventController.class).withRel("query-events"));
-		eventModel.add(linkTo(EventController.class).slash(event.getId()).withRel("update-event"));
+		eventModel.add(linkTo(EventController.class).slash(savedEvent.getId()).withRel("update-event"));
 		eventModel.add(new Link("/docs/index.html#resources-events-update").withRel("profile"));
 		return ResponseEntity.ok(eventModel);
 	}
