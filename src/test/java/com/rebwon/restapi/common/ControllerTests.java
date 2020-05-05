@@ -17,7 +17,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.filter.CharacterEncodingFilter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -38,7 +37,6 @@ public class ControllerTests {
 	@BeforeEach
 	protected void setUp(WebApplicationContext webApplicationContext, RestDocumentationContextProvider restDocs) {
 		this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
-			.addFilter(new CharacterEncodingFilter("UTF-8", true))
 			.apply(documentationConfiguration(restDocs).operationPreprocessors()
 				.withRequestDefaults(prettyPrint())
 				.withResponseDefaults(prettyPrint()))
