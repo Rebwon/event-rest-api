@@ -429,7 +429,33 @@ public class EventControllerTests extends ControllerTests {
 			.andExpect(jsonPath("id").exists())
 			.andExpect(jsonPath("_links.self").exists())
 			.andExpect(jsonPath("_links.profile").exists())
-			.andDo(document("get-an-event"));
+			.andDo(document("get-event",
+				links(
+					linkWithRel("self").description("link to self"),
+					linkWithRel("profile").description("link to profile")
+				),
+				responseHeaders(
+					headerWithName(HttpHeaders.CONTENT_TYPE).description("content type")
+				),
+				responseFields(
+					fieldWithPath("id").description("identifier of update event"),
+					fieldWithPath("name").description("name of update event"),
+					fieldWithPath("description").description("description of update event"),
+					fieldWithPath("beginEnrollmentDateTime").description("beginEnrollmentDateTime of update event"),
+					fieldWithPath("closeEnrollmentDateTime").description("closeEnrollmentDateTime of update event"),
+					fieldWithPath("beginEventDateTime").description("beginEventDateTime of update event"),
+					fieldWithPath("endEventDateTime").description("endEventDateTime of update event"),
+					fieldWithPath("basePrice").description("basePrice of update event"),
+					fieldWithPath("maxPrice").description("maxPrice of update event"),
+					fieldWithPath("limitOfEnrollment").description("limitOfEnrollment of update event"),
+					fieldWithPath("location").description("location of update event"),
+					fieldWithPath("free").description("it tells if this event is free or not"),
+					fieldWithPath("offline").description("it tells if this event is offline meeting or not"),
+					fieldWithPath("eventStatus").description("event status"),
+					fieldWithPath("_links.self.href").description("link to self"),
+					fieldWithPath("_links.profile.href").description("link to profile")
+				)
+				));
 	}
 
 	@Test
