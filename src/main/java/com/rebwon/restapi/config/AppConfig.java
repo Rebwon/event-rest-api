@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.rebwon.restapi.accounts.Account;
 import com.rebwon.restapi.accounts.AccountRole;
 import com.rebwon.restapi.accounts.AccountService;
+import com.rebwon.restapi.common.AppProperties;
 
 @Configuration
 public class AppConfig {
@@ -34,14 +35,24 @@ public class AppConfig {
 			@Autowired
 			AccountService accountService;
 
+			@Autowired
+			AppProperties appProperties;
+
 			@Override
 			public void run(ApplicationArguments args) throws Exception {
-				Account account = Account.builder()
-					.email("msolo021015@gmail.com")
-					.password("rebwon")
+				Account admin = Account.builder()
+					.email(appProperties.getAdminUsername())
+					.password(appProperties.getAdminPassword())
 					.roles(Set.of(AccountRole.ADMIN, AccountRole.USER))
 					.build();
-				accountService.saveAccount(account);
+				accountService.saveAccount(admin);
+
+				Account user = Account.builder()
+					.email(appProperties.getUserUsername())
+					.password(appProperties.getUserPassword())
+					.roles(Set.of(AccountRole.USER))
+					.build();
+				accountService.saveAccount(user);
 			}
 		};
 	}

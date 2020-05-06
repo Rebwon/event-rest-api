@@ -27,6 +27,7 @@ import com.rebwon.restapi.accounts.Account;
 import com.rebwon.restapi.accounts.AccountRepository;
 import com.rebwon.restapi.accounts.AccountRole;
 import com.rebwon.restapi.accounts.AccountService;
+import com.rebwon.restapi.common.AppProperties;
 import com.rebwon.restapi.common.ControllerTests;
 
 public class EventControllerTests extends ControllerTests {
@@ -39,6 +40,9 @@ public class EventControllerTests extends ControllerTests {
 
 	@Autowired
 	AccountRepository accountRepository;
+
+	@Autowired
+	AppProperties appProperties;
 
 	@BeforeEach
 	void setUp() {
@@ -134,22 +138,17 @@ public class EventControllerTests extends ControllerTests {
 
 	private String getAccessToken() throws Exception {
 		// given
-		String username = "rebwon@gmail.com";
-		String password = "rebwon";
 		Account account = Account.builder()
-			.email(username)
-			.password(password)
+			.email(appProperties.getUserUsername())
+			.password(appProperties.getUserPassword())
 			.roles(Set.of(AccountRole.USER, AccountRole.ADMIN))
 			.build();
 		this.accountService.saveAccount(account);
 
-		String clientId = "myApp";
-		String clientSecret = "pass";
-
 		ResultActions perform = this.mockMvc.perform(post("/oauth/token")
-			.with(httpBasic(clientId, clientSecret))
-			.param("username", username)
-			.param("password", password)
+			.with(httpBasic(appProperties.getClientId(), appProperties.getClientSecret()))
+			.param("username", appProperties.getUserUsername())
+			.param("password", appProperties.getUserPassword())
 			.param("grant_type", "password"));
 
 		var responseBody = perform.andReturn().getResponse().getContentAsString();
