@@ -17,7 +17,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.annotation.Order;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -234,7 +233,18 @@ public class EventControllerTests extends ControllerTests {
 			.andExpect(jsonPath("content[0].objectName").exists())
 			.andExpect(jsonPath("content[0].defaultMessage").exists())
 			.andExpect(jsonPath("content[0].code").exists())
-			.andExpect(jsonPath("_links.index").exists());
+			.andExpect(jsonPath("_links.index").exists())
+			.andDo(document("errors",
+				links(
+					linkWithRel("index").description("link to index")
+				),
+				relaxedResponseFields(
+					fieldWithPath("content[0].objectName").description("error objectName"),
+					fieldWithPath("content[0].code").description("error code"),
+					fieldWithPath("content[0].defaultMessage").description("error message"),
+					fieldWithPath("_links.index.href").description("link to index")
+				)
+			));
 	}
 
 	@Test
@@ -344,7 +354,6 @@ public class EventControllerTests extends ControllerTests {
 	}
 
 	@Test
-	@Order(1)
 	@DisplayName("도메인 로직 검증에서 실패한 테스트")
 	void updateEvent_Bad_request_domain_error() throws Exception {
 		Event dbEvent = generateEvent(125);
