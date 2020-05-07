@@ -109,7 +109,7 @@ public class EventControllerTests extends ControllerTests {
 					headerWithName(HttpHeaders.LOCATION).description("location"),
 					headerWithName(HttpHeaders.CONTENT_TYPE).description("content type")
 				),
-				relaxedResponseFields(
+				responseFields(
 					fieldWithPath("id").description("identifier of new event"),
 					fieldWithPath("name").description("name of new event"),
 					fieldWithPath("description").description("description of new event"),
@@ -124,6 +124,7 @@ public class EventControllerTests extends ControllerTests {
 					fieldWithPath("free").description("it tells if this event is free or not"),
 					fieldWithPath("offline").description("it tells if this event is offline meeting or not"),
 					fieldWithPath("eventStatus").description("event status"),
+					fieldWithPath("manager.id").description("event manager id"),
 					fieldWithPath("_links.self.href").description("link to self"),
 					fieldWithPath("_links.query-events.href").description("link to query-events"),
 					fieldWithPath("_links.update-event.href").description("link to update-event"),
