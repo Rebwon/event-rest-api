@@ -109,7 +109,7 @@ public class EventControllerTests extends ControllerTests {
 					headerWithName(HttpHeaders.LOCATION).description("location"),
 					headerWithName(HttpHeaders.CONTENT_TYPE).description("content type")
 				),
-				responseFields(
+				relaxedResponseFields(
 					fieldWithPath("id").description("identifier of new event"),
 					fieldWithPath("name").description("name of new event"),
 					fieldWithPath("description").description("description of new event"),
@@ -275,7 +275,7 @@ public class EventControllerTests extends ControllerTests {
 				responseHeaders(
 					headerWithName(HttpHeaders.CONTENT_TYPE).description("content type")
 				),
-				responseFields(
+				relaxedResponseFields(
 					fieldWithPath("id").description("identifier of update event"),
 					fieldWithPath("name").description("name of update event"),
 					fieldWithPath("description").description("description of update event"),
@@ -387,7 +387,7 @@ public class EventControllerTests extends ControllerTests {
 				responseHeaders(
 					headerWithName(HttpHeaders.CONTENT_TYPE).description("content type")
 				),
-				responseFields(
+				relaxedResponseFields(
 					fieldWithPath("_embedded.eventList[0].id").description("identifier of new event"),
 					fieldWithPath("_embedded.eventList[0].name").description("name of new event"),
 					fieldWithPath("_embedded.eventList[0].description").description("description of new event"),
@@ -418,6 +418,25 @@ public class EventControllerTests extends ControllerTests {
 	}
 
 	@Test
+	@DisplayName("인증된 사용자가 30개의 이벤트를 10개씩 두번째 페이지 조회하기")
+	void queryEventsWithAuthentication() throws Exception {
+		IntStream.range(0, 30).forEach(this::generateEvent);
+
+		mockMvc.perform(get("/api/events")
+				.header(HttpHeaders.AUTHORIZATION, getBearerToken())
+				.param("page", "1")
+				.param("size", "10")
+				.param("sort", "name,DESC"))
+			.andDo(print())
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("page").exists())
+			.andExpect(jsonPath("_embedded.eventList[0]._links.self").exists())
+			.andExpect(jsonPath("_links.self").exists())
+			.andExpect(jsonPath("_links.profile").exists())
+			.andExpect(jsonPath("_links.create-event").exists());
+	}
+
+	@Test
 	@DisplayName("기존의 이벤트를 하나 조회하기")
 	void findEvent() throws Exception {
 		Event event = this.generateEvent(100);
@@ -437,7 +456,7 @@ public class EventControllerTests extends ControllerTests {
 				responseHeaders(
 					headerWithName(HttpHeaders.CONTENT_TYPE).description("content type")
 				),
-				responseFields(
+				relaxedResponseFields(
 					fieldWithPath("id").description("identifier of update event"),
 					fieldWithPath("name").description("name of update event"),
 					fieldWithPath("description").description("description of update event"),
@@ -456,6 +475,22 @@ public class EventControllerTests extends ControllerTests {
 					fieldWithPath("_links.profile.href").description("link to profile")
 				)
 				));
+	}
+
+	@Test
+	@DisplayName("인증된 사용자가 기존의 이벤트를 하나 조회하기")
+	void findEventWithAuthentication() throws Exception {
+		Event event = this.generateEvent(100);
+
+		mockMvc.perform(get("/api/events/{id}", event.getId())
+				.header(HttpHeaders.AUTHORIZATION, getBearerToken()))
+			.andDo(print())
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("name").exists())
+			.andExpect(jsonPath("id").exists())
+			.andExpect(jsonPath("_links.self").exists())
+			.andExpect(jsonPath("_links.profile").exists())
+			.andExpect(jsonPath("_links.update-event").exists());
 	}
 
 	@Test

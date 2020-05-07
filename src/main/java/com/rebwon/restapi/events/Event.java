@@ -10,7 +10,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.rebwon.restapi.accounts.Account;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -45,7 +44,6 @@ public class Event {
 	private boolean free;
 	@Enumerated(EnumType.STRING)
 	private EventStatus eventStatus = EventStatus.DRAFT;
-	@JsonIgnore
 	@ManyToOne
 	private Account manager;
 
