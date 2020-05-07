@@ -17,6 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -134,17 +135,18 @@ public class EventControllerTests extends ControllerTests {
 	}
 
 	private String getBearerToken() throws Exception {
-		return "Bearer" + getAccessToken();
+		return "Bearer" + getAccessToken(true);
 	}
 
-	private String getAccessToken() throws Exception {
+	private String getBearerToken(boolean needToAccount) throws Exception {
+		return "Bearer" + getAccessToken(needToAccount);
+	}
+
+	private String getAccessToken(boolean needToAccount) throws Exception {
 		// given
-		Account account = Account.builder()
-			.email(appProperties.getUserUsername())
-			.password(appProperties.getUserPassword())
-			.roles(Set.of(AccountRole.USER, AccountRole.ADMIN))
-			.build();
-		this.accountService.saveAccount(account);
+		if(needToAccount) {
+			createAuthAccount();
+		}
 
 		ResultActions perform = this.mockMvc.perform(post("/oauth/token")
 			.with(httpBasic(appProperties.getClientId(), appProperties.getClientSecret()))
@@ -155,6 +157,15 @@ public class EventControllerTests extends ControllerTests {
 		var responseBody = perform.andReturn().getResponse().getContentAsString();
 		Jackson2JsonParser parser = new Jackson2JsonParser();
 		return parser.parseMap(responseBody).get("access_token").toString();
+	}
+
+	private Account createAuthAccount() {
+		Account account = Account.builder()
+			.email(appProperties.getUserUsername())
+			.password(appProperties.getUserPassword())
+			.roles(Set.of(AccountRole.USER, AccountRole.ADMIN))
+			.build();
+		return this.accountService.saveAccount(account);
 	}
 
 	@Test
@@ -229,7 +240,8 @@ public class EventControllerTests extends ControllerTests {
 	@Test
 	@DisplayName("기존 이벤트를 수정하려는 경우")
 	void updateEvent() throws Exception {
-		Event dbEvent = generateEvent(130);
+		Account account = this.createAuthAccount();
+		Event dbEvent = generateEvent(130, account);
 		EventPayload event = EventPayload.builder()
 			.name("Spring")
 			.description("Spring Rest API")
@@ -244,7 +256,7 @@ public class EventControllerTests extends ControllerTests {
 			.build();
 
 		mockMvc.perform(put("/api/events/{id}", dbEvent.getId())
-				.header(HttpHeaders.AUTHORIZATION, getBearerToken())
+				.header(HttpHeaders.AUTHORIZATION, getBearerToken(false))
 				.accept(MediaTypes.HAL_JSON)
 				.content(objectMapper.writeValueAsString(event))
 				.contentType(MediaType.APPLICATION_JSON))
@@ -332,6 +344,7 @@ public class EventControllerTests extends ControllerTests {
 	}
 
 	@Test
+	@Order(1)
 	@DisplayName("도메인 로직 검증에서 실패한 테스트")
 	void updateEvent_Bad_request_domain_error() throws Exception {
 		Event dbEvent = generateEvent(125);
@@ -368,8 +381,7 @@ public class EventControllerTests extends ControllerTests {
 		mockMvc.perform(get("/api/events")
 				.param("page", "1")
 				.param("size", "10")
-				.param("sort", "name,DESC")
-		)
+				.param("sort", "name,DESC"))
 			.andDo(print())
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("page").exists())
@@ -481,10 +493,11 @@ public class EventControllerTests extends ControllerTests {
 	@Test
 	@DisplayName("인증된 사용자가 기존의 이벤트를 하나 조회하기")
 	void findEventWithAuthentication() throws Exception {
-		Event event = this.generateEvent(100);
+		Account account = this.createAuthAccount();
+		Event event = this.generateEvent(100, account);
 
 		mockMvc.perform(get("/api/events/{id}", event.getId())
-				.header(HttpHeaders.AUTHORIZATION, getBearerToken()))
+				.header(HttpHeaders.AUTHORIZATION, getBearerToken(false)))
 			.andDo(print())
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("name").exists())
@@ -502,11 +515,21 @@ public class EventControllerTests extends ControllerTests {
 			.andExpect(status().isNotFound());
 	}
 
+	private Event generateEvent(int i, Account account) {
+		Event event = buildEvent(i);
+		event.setManager(account);
+		return this.eventRepository.save(event);
+	}
+
 	private Event generateEvent(int i) {
-		Event event = Event.builder()
+		Event event = buildEvent(i);
+		return this.eventRepository.save(event);
+	}
+
+	private Event buildEvent(int i) {
+		return Event.builder()
 			.name("event " + i)
 			.description("test event")
 			.build();
-		return this.eventRepository.save(event);
 	}
 }

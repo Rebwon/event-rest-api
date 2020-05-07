@@ -115,7 +115,7 @@ public class EventController {
 		Event event = optionalEvent.get();
 		EventModel eventModel = new EventModel(event);
 		eventModel.add(new Link("/docs/index.html#resources-events-get").withRel("profile"));
-		if(event.getManager().equals(account)) {
+		if(account != null && event.getManager().equals(account)) {
 			eventModel.add(linkTo(EventController.class).slash(event.getId()).withRel("update-event"));
 		}
 		return ResponseEntity.ok(eventModel);
