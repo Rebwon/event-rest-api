@@ -75,7 +75,7 @@ public class EventControllerTests extends ControllerTests {
 			.andExpect(status().isCreated())
 			.andExpect(jsonPath("id").exists())
 			.andExpect(header().exists(HttpHeaders.LOCATION))
-			.andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE))
+			.andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE.concat(";charset=UTF-8")))
 			.andExpect(jsonPath("free").value(false))
 			.andExpect(jsonPath("offline").value(true))
 			.andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name()))
