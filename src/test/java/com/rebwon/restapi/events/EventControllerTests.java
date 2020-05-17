@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.security.oauth2.common.util.Jackson2JsonParser;
 import org.springframework.test.web.servlet.ResultActions;
 
@@ -94,16 +95,16 @@ public class EventControllerTests extends ControllerTests {
 					headerWithName(HttpHeaders.CONTENT_TYPE).description("content type")
 				),
 				requestFields(
-					fieldWithPath("name").description("name of new event"),
-					fieldWithPath("description").description("description of new event"),
-					fieldWithPath("beginEnrollmentDateTime").description("beginEnrollmentDateTime of new event"),
-					fieldWithPath("closeEnrollmentDateTime").description("closeEnrollmentDateTime of new event"),
-					fieldWithPath("beginEventDateTime").description("beginEventDateTime of new event"),
-					fieldWithPath("endEventDateTime").description("endEventDateTime of new event"),
-					fieldWithPath("basePrice").description("basePrice of new event"),
-					fieldWithPath("maxPrice").description("maxPrice of new event"),
-					fieldWithPath("limitOfEnrollment").description("limitOfEnrollment of new event"),
-					fieldWithPath("location").description("location of new event")
+					fieldWithPath("name").type(JsonFieldType.STRING).description("<<name,name of new event>>"),
+					fieldWithPath("description").type(JsonFieldType.STRING).description("<<description,description of new event>>"),
+					fieldWithPath("beginEnrollmentDateTime").type(JsonFieldType.STRING).description("<<beginEnrollmentDateTime,beginEnrollmentDateTime of new event>>"),
+					fieldWithPath("closeEnrollmentDateTime").type(JsonFieldType.STRING).description("<<closeEnrollmentDateTime,closeEnrollmentDateTime of new event>>"),
+					fieldWithPath("beginEventDateTime").type(JsonFieldType.STRING).description("<<beginEventDateTime,beginEventDateTime of new event>>"),
+					fieldWithPath("endEventDateTime").type(JsonFieldType.STRING).description("<<endEventDateTime,endEventDateTime of new event>>"),
+					fieldWithPath("basePrice").type(JsonFieldType.NUMBER).description("<<basePrice,basePrice of new event>>"),
+					fieldWithPath("maxPrice").type(JsonFieldType.NUMBER).description("<<maxPrice,maxPrice of new event>>"),
+					fieldWithPath("limitOfEnrollment").type(JsonFieldType.NUMBER).description("<<limitOfEnrollment,limitOfEnrollment of new event>>"),
+					fieldWithPath("location").type(JsonFieldType.STRING).description("<<location,location of new event>>")
 				),
 				responseHeaders(
 					headerWithName(HttpHeaders.LOCATION).description("location"),
